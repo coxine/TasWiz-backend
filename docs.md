@@ -92,7 +92,7 @@ Content-Type: application/json
 
 ### 说明
 
-* **请求头** ：必须包含 `Content-Type: application/json`。
-* **请求体** ：包含 `username` 和 `password` 字段，均为字符串类型。
-* **成功响应** ：返回 `success` 为 `true`，并包含一条成功消息和一个 JWT 令牌。
-* **失败响应** ：返回 `success` 为 `false`，并包含一条错误消息。
+- **请求头** ：必须包含 `Content-Type: application/json`。
+- **请求体** ：包含 `username` 和 `password` 字段，均为字符串类型。
+- **成功响应** ：返回 `success` 为 `true`，并包含一条成功消息和一个 JWT 令牌。
+- **失败响应** ：返回 `success` 为 `false`，并包含一条错误消息。
