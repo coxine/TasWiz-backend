@@ -1,4 +1,8 @@
-登录
+# API 文档
+
+## 权限相关
+
+### 登录
 
 #### **URL**
 
@@ -50,49 +54,149 @@ Content-Type: application/json
 }
 ```
 
-#### **示例**
+### 验证 Token 接口
 
-##### 请求示例
+#### **URL**
+
+`POST /api/isTokenValid`
+
+#### **方法**
+
+`POST`
+
+#### **描述**
+
+验证客户端提供的 JWT token 是否有效。
+
+#### **请求头**
 
 ```http
-POST /api/login HTTP/1.1
-Host: example.com
+Authorization: Bearer <token>
 Content-Type: application/json
-
-{
-  "username": "user123",
-  "password": "password123"
-}
 ```
 
-##### 成功响应示例
+#### **请求体**
+
+无
+
+#### **响应**
+
+##### 成功响应
 
 ```http
 HTTP/1.1 200 OK
 Content-Type: application/json
+```
 
+```json
 {
-  "success": true,
-  "message": "Login successful",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  "message": "Token is valid"
 }
 ```
 
-##### 失败响应示例
+##### 失败响应
 
 ```http
 HTTP/1.1 401 Unauthorized
 Content-Type: application/json
+```
 
+```json
 {
-  "success": false,
-  "message": "Invalid username or password"
+  "message": "Token is invalid or missing"
 }
 ```
 
-### 说明
+##### 错误响应
 
-- **请求头** ：必须包含 `Content-Type: application/json`。
-- **请求体** ：包含 `username` 和 `password` 字段，均为字符串类型。
-- **成功响应** ：返回 `success` 为 `true`，并包含一条成功消息和一个 JWT 令牌。
-- **失败响应** ：返回 `success` 为 `false`，并包含一条错误消息。
+```http
+HTTP/1.1 500 Internal Server Error
+Content-Type: application/json
+```
+
+```json
+{
+  "message": "Internal server error"
+}
+```
+
+### 注册
+
+#### **URL**
+
+`POST /api/register`
+
+#### **请求头**
+
+```http
+Content-Type: application/json
+```
+
+#### **请求体**
+
+```json
+{
+  "username": "string",
+  "password": "string"
+}
+```
+
+#### **响应**
+
+##### 成功响应
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+```
+
+```json
+{
+  "success": true,
+  "message": "Registration successful",
+  "token": "jwt-token-string"
+}
+```
+
+##### 失败响应
+
+###### 用户名已存在
+
+```http
+HTTP/1.1 409 Conflict
+Content-Type: application/json
+```
+
+```json
+{
+  "success": false,
+  "message": "Username already exists"
+}
+```
+
+###### 其他错误
+
+```http
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+```
+
+```json
+{
+  "success": false,
+  "message": "Invalid input"
+}
+```
+
+##### 错误响应
+
+```http
+HTTP/1.1 500 Internal Server Error
+Content-Type: application/json
+```
+
+```json
+{
+  "message": "Internal server error"
+}
+```
