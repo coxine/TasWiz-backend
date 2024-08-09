@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Headers,
   Inject,
   Post,
   Query,
@@ -23,6 +24,7 @@ export class APIController {
     const user = await this.userService.getUser({ uid });
     return { success: true, message: 'OK', data: user };
   }
+
   @Post('/login')
   async login(
     @Body(ALL) body: { username: string; password: string },
@@ -34,13 +36,56 @@ export class APIController {
       return {
         success: true,
         message: 'Login successful',
-        token: 'jwt-token-string',
+        token: '12345678',
       };
     } else {
       ctx.status = 401;
       return {
         success: false,
         message: 'Invalid username or password',
+      };
+    }
+  }
+
+  @Post('/isTokenValid')
+  async isTokenValid(@Headers(ALL) headers: any): Promise<void> {
+    const token = headers['authorization']?.split(' ')[1];
+
+    if (token === '12345678') {
+      this.ctx.status = 200;
+      this.ctx.body = { message: 'Token is valid' };
+    } else {
+      this.ctx.status = 401;
+      this.ctx.body = { message: 'Token is invalid or missing' };
+    }
+  }
+
+  @Post('/register')
+  async register(
+    @Body(ALL) body: { username: string; password: string },
+    ctx: Context
+  ) {
+    const { username, password } = body;
+
+    if (username === '123') {
+      ctx.status = 409;
+      return {
+        success: false,
+        message: 'Username already exists',
+      };
+    }
+
+    if (username && password) {
+      return {
+        success: true,
+        message: 'Registration successful',
+        token: '12345678',
+      };
+    } else {
+      ctx.status = 400;
+      return {
+        success: false,
+        message: 'Invalid input',
       };
     }
   }
