@@ -1,4 +1,5 @@
 import { Configuration, App } from '@midwayjs/core';
+import * as crossDomain from '@midwayjs/cross-domain';
 import * as koa from '@midwayjs/koa';
 import * as validate from '@midwayjs/validate';
 import * as info from '@midwayjs/info';
@@ -9,6 +10,7 @@ import { ReportMiddleware } from './middleware/report.middleware';
 
 @Configuration({
   imports: [
+    crossDomain,
     koa,
     validate,
     {
