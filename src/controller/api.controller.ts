@@ -26,10 +26,7 @@ export class APIController {
   }
 
   @Post('/login')
-  async login(
-    @Body(ALL) body: { username: string; password: string },
-    ctx: Context
-  ) {
+  async login(@Body(ALL) body: { username: string; password: string }) {
     const { username, password } = body;
 
     if (username === '123' && password === '456') {
@@ -39,7 +36,7 @@ export class APIController {
         token: '12345678',
       };
     } else {
-      ctx.status = 401;
+      this.ctx.status = 401;
       return {
         success: false,
         message: 'Invalid username or password',
@@ -61,14 +58,10 @@ export class APIController {
   }
 
   @Post('/register')
-  async register(
-    @Body(ALL) body: { username: string; password: string },
-    ctx: Context
-  ) {
+  async register(@Body(ALL) body: { username: string; password: string }) {
     const { username, password } = body;
-
     if (username === '123') {
-      ctx.status = 409;
+      this.ctx.status = 409;
       return {
         success: false,
         message: 'Username already exists',
@@ -82,7 +75,7 @@ export class APIController {
         token: '12345678',
       };
     } else {
-      ctx.status = 400;
+      this.ctx.status = 400;
       return {
         success: false,
         message: 'Invalid input',
