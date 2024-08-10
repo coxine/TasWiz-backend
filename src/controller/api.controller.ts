@@ -82,4 +82,35 @@ export class APIController {
       };
     }
   }
+  @Post('/changePassword')
+  async changePassword(
+    @Body(ALL)
+    body: {
+      username: string;
+      oldPassword: string;
+      newPassword: string;
+    }
+  ) {
+    const { username, oldPassword, newPassword } = body;
+
+    if (username === '123' && oldPassword === '456') {
+      if (oldPassword !== newPassword) {
+        return {
+          success: true,
+          message: 'Password changed successfully',
+        };
+      } else {
+        this.ctx.status = 500;
+        return {
+          message: 'Internal server error',
+        };
+      }
+    } else {
+      this.ctx.status = 401;
+      return {
+        success: false,
+        message: 'Old password is incorrect',
+      };
+    }
+  }
 }
