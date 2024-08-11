@@ -82,6 +82,7 @@ export class APIController {
       };
     }
   }
+
   @Post('/changePassword')
   async changePassword(
     @Body(ALL)
@@ -110,6 +111,93 @@ export class APIController {
       return {
         success: false,
         message: 'Old password is incorrect',
+      };
+    }
+  }
+
+  @Get('/tasks')
+  async getTasks(
+    @Query('username') username: string,
+    @Headers('authorization') authHeader: string
+  ) {
+    const token = authHeader?.split(' ')[1];
+
+    if (username === '123' && token === '12345678') {
+      return {
+        success: true,
+        message: 'OK',
+        data: [
+          {
+            projectID: 1,
+            projectName: '待办',
+            projectOwner: '123',
+            tasks: [
+              {
+                taskID: 1,
+                taskName: '任务1',
+                taskOwner: '123',
+                taskDetail: '# 123\n## 456',
+                comments: [
+                  {
+                    content: '这是一条评论',
+                    timestamp: 1145141919810,
+                  },
+                  {
+                    content: '这是另一条评论',
+                    timestamp: 1145148101919,
+                  },
+                ],
+              },
+              {
+                taskID: 2,
+                taskName: '任务2',
+                taskOwner: '123',
+                taskDetail: '# 123\n## 456',
+                comments: [
+                  {
+                    content: '这是一条评论',
+                    timestamp: 1145141919810,
+                  },
+                  {
+                    content: '这是另一条评论',
+                    timestamp: 1888888888888,
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            projectID: 2,
+            projectName: '待办2',
+            projectOwner: '123',
+            tasks: [
+              {
+                taskID: 1,
+                taskName: '任务1',
+                taskOwner: '123',
+                taskDetail: '# 123\n## 456',
+                comments: [
+                  {
+                    content: '这是一条评论',
+                    timestamp: 1145141919810,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+    } else if (token !== '12345678') {
+      this.ctx.status = 401;
+      return {
+        success: false,
+        message: 'Unauthorized',
+      };
+    } else {
+      this.ctx.status = 404;
+      return {
+        success: false,
+        message: 'User not found',
       };
     }
   }
