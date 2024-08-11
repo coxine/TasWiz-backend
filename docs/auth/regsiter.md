@@ -15,15 +15,11 @@ Content-Type: application/json
 ## **请求体**
 
 ```json
-
 {
+  "username": "string",
 
-"username": "string",
-
-"password": "string"
-
+  "password": "string"
 }
-
 ```
 
 ## **响应**
@@ -39,17 +35,13 @@ Content-Type: application/json
 ```
 
 ```json
-
 {
+  "success": true,
 
-"success": true,
+  "message": "Registration successful",
 
-"message": "Registration successful",
-
-"token": "jwt-token-string"
-
+  "token": "jwt-token-string"
 }
-
 ```
 
 ### 失败响应
@@ -65,15 +57,11 @@ Content-Type: application/json
 ```
 
 ```json
-
 {
+  "success": false,
 
-"success": false,
-
-"message": "Username already exists"
-
+  "message": "Username already exists"
 }
-
 ```
 
 ## 其他错误
@@ -87,15 +75,11 @@ Content-Type: application/json
 ```
 
 ```json
-
 {
+  "success": false,
 
-"success": false,
-
-"message": "Invalid input"
-
+  "message": "Invalid input"
 }
-
 ```
 
 ### 错误响应
@@ -109,11 +93,7 @@ Content-Type: application/json
 ```
 
 ```json
-
 {
-
-"message": "Internal server error"
-
+  "message": "Internal server error"
 }
-
 ```

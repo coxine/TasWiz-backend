@@ -30,25 +30,25 @@ Content-Type: application/json
 
 ```json
 [
-    {
-        "projectID": 1,
-        "projectName": "待办",
-        "projectOwner": "123",
-        "tasks": [
-            {
-                "taskID": 1,
-                "taskName": "任务1",
-                "taskOwner": "123",
-                "taskDetail": "# 123\n## 456",
-                "comments": [
-                    {
-                        "content": "这是一条评论",
-                        "timestamp": 1145141919810
-                    }
-                ]
-            }
+  {
+    "projectID": 1,
+    "projectName": "待办",
+    "projectOwner": "123",
+    "tasks": [
+      {
+        "taskID": 1,
+        "taskName": "任务1",
+        "taskOwner": "123",
+        "taskDetail": "# 123\n## 456",
+        "comments": [
+          {
+            "content": "这是一条评论",
+            "timestamp": 1145141919810
+          }
         ]
-    }
+      }
+    ]
+  }
 ]
 ```
 
@@ -104,7 +104,6 @@ Content-Type: application/json
 ```
 
 ```json
-
 {
   "message": "Internal server error"
 }
