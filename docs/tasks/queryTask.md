@@ -104,6 +104,7 @@ Content-Type: application/json
 ```
 
 ```json
+
 {
   "message": "Internal server error"
 }

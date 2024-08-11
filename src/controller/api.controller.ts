@@ -5,11 +5,13 @@ import {
   Headers,
   Inject,
   Post,
+  Put,
   Query,
   ALL,
 } from '@midwayjs/core';
 import { Context } from '@midwayjs/koa';
 import { UserService } from '../service/user.service';
+import { AuthMiddleware } from '../middleware/auth.middleware';
 
 @Controller('/api')
 export class APIController {
@@ -41,19 +43,6 @@ export class APIController {
         success: false,
         message: 'Invalid username or password',
       };
-    }
-  }
-
-  @Post('/isTokenValid')
-  async isTokenValid(@Headers(ALL) headers: any): Promise<void> {
-    const token = headers['authorization']?.split(' ')[1];
-
-    if (token === '12345678') {
-      this.ctx.status = 200;
-      this.ctx.body = { message: 'Token is valid' };
-    } else {
-      this.ctx.status = 401;
-      this.ctx.body = { message: 'Token is invalid or missing' };
     }
   }
 
@@ -198,6 +187,83 @@ export class APIController {
       return {
         success: false,
         message: 'User not found',
+      };
+    }
+  }
+
+  @Post('/comments', { middleware: [AuthMiddleware] })
+  async addComment(
+    @Body(ALL)
+    body: {
+      username: string;
+      taskId: string;
+      comment: string;
+      timestamp: number;
+    }
+  ) {
+    const { username, taskId, comment, timestamp } = body;
+
+    if (username === '123') {
+      // const result = await this.userService.addComment({ username, taskId, comment, timestamp });
+      return {
+        success: true,
+        message: 'Comment added successfully',
+        data: {
+          username: username,
+          taskId: taskId,
+          comment: comment,
+          timestamp: timestamp,
+        },
+      };
+    } else {
+      this.ctx.status = 401;
+      return {
+        success: false,
+        message: 'Invalid token or unauthorized access',
+      };
+    }
+  }
+
+  @Put('/tasks', { middleware: [AuthMiddleware] })
+  async editTask(
+    @Body(ALL)
+    body: {
+      taskId: number;
+      taskName: string;
+      taskDetail: string;
+      username: string;
+      timestamp: number;
+    }
+  ) {
+    const { taskId, taskName, taskDetail, username, timestamp } = body;
+
+    if (username === '123') {
+      // const result = await this.userService.editTask({
+      //   taskId,
+      //   taskName,
+      //   taskDetail,
+      //   timestamp,
+      // });
+      if (taskId === 1) {
+        return {
+          success: true,
+          message: 'Task updated successfully',
+          taskDetail: taskDetail,
+          taskName: taskName,
+          timestamp: timestamp,
+        };
+      } else {
+        this.ctx.status = 404;
+        return {
+          success: false,
+          message: 'Task not found',
+        };
+      }
+    } else {
+      this.ctx.status = 401;
+      return {
+        success: false,
+        message: 'Invalid token or unauthorized access',
       };
     }
   }
