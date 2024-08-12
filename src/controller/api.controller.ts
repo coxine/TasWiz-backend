@@ -362,4 +362,39 @@ export class APIController {
       };
     }
   }
+
+  @Post('/project', { middleware: [AuthMiddleware] })
+  async addProject(
+    @Body('username') username: string,
+    @Body('projectName') projectName: string
+  ) {
+    if (username && projectName) {
+      // Simulate adding project to database
+      const projectAdded = true; // Assume the project is added successfully
+
+      if (projectAdded) {
+        this.ctx.status = 201;
+        return {
+          success: true,
+          message: 'Project created successfully',
+          project: {
+            username: username,
+            projectName: projectName,
+          },
+        };
+      } else {
+        this.ctx.status = 500;
+        return {
+          success: false,
+          message: 'Internal server error',
+        };
+      }
+    } else {
+      this.ctx.status = 400;
+      return {
+        success: false,
+        message: 'Invalid request data',
+      };
+    }
+  }
 }
