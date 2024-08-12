@@ -105,8 +105,8 @@ export class APIController {
     }
   }
 
-  @Get('/project')
-  async getProject(
+  @Get('/projects')
+  async getProjects(
     @Query('username') username: string,
     @Headers('authorization') authHeader: string
   ) {
@@ -322,6 +322,36 @@ export class APIController {
         return {
           success: false,
           message: 'Task not found',
+        };
+      }
+    } else {
+      this.ctx.status = 401;
+      return {
+        success: false,
+        message: 'Invalid token or unauthorized access',
+      };
+    }
+  }
+
+  @Del('/project', { middleware: [AuthMiddleware] })
+  async deleteProject(
+    @Body('projectId') projectId: number,
+    @Body('username') username: string
+  ) {
+    if (username === '123' && projectId === 1) {
+      // Simulate deleting project from database
+      const projectDeleted = true; // Assume the project is deleted successfully
+
+      if (projectDeleted) {
+        return {
+          success: true,
+          message: 'Project deleted successfully',
+        };
+      } else {
+        this.ctx.status = 404;
+        return {
+          success: false,
+          message: 'Project not found',
         };
       }
     } else {

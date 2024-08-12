@@ -1,8 +1,8 @@
-# 查询用户项目
+# 查询用户所有项目
 
 ## **URL**
 
-`GET /api/project`
+`GET /api/projects`
 
 ## **请求头**
 
