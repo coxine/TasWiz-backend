@@ -397,4 +397,44 @@ export class APIController {
       };
     }
   }
+
+  @Post('/task', { middleware: [AuthMiddleware] })
+  async createTask(
+    @Body('taskName') taskName: string,
+    @Body('taskDetail') taskDetail: string,
+    @Body('username') username: string,
+    @Body('projectId') projectId: number
+  ) {
+    if (taskName && taskDetail && username === '123' && projectId === 1) {
+      // Simulate adding task to database
+      const taskId = Math.floor(Math.random() * 1000); // Generate a random task ID
+      const taskCreated = true; // Assume the task is created successfully
+
+      if (taskCreated) {
+        this.ctx.status = 201;
+        return {
+          success: true,
+          message: 'Task created successfully',
+          task: {
+            taskId: taskId,
+            taskName: taskName,
+            taskDetail: taskDetail,
+            username: username,
+          },
+        };
+      } else {
+        this.ctx.status = 500;
+        return {
+          success: false,
+          message: 'Internal server error',
+        };
+      }
+    } else {
+      this.ctx.status = 400;
+      return {
+        success: false,
+        message: 'Invalid request data',
+      };
+    }
+  }
 }
