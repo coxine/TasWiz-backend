@@ -15,7 +15,7 @@ Authorization: Bearer jwt-token-string
 
 ```json
 {
-  "taskId": "string",
+  "taskId": "string"  ,
   "username": "string"
 }
 ```
@@ -36,6 +36,12 @@ Content-Type: application/json
     "taskId": "number",
     "taskName": "string",
     "taskDetail": "string",
+    "comments": [
+      {
+        "content": "string",
+        "timestamp": "number"
+      }
+    ],
     "username": "string",
     "timestamp": "number"
   }

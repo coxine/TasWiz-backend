@@ -105,8 +105,8 @@ export class APIController {
     }
   }
 
-  @Get('/tasks')
-  async getTasks(
+  @Get('/project')
+  async getProject(
     @Query('username') username: string,
     @Headers('authorization') authHeader: string
   ) {
@@ -162,10 +162,11 @@ export class APIController {
             projectOwner: '123',
             tasks: [
               {
-                taskID: 1,
-                taskName: '任务1',
+                taskID: 3,
+                taskName: '任务3',
                 taskOwner: '123',
-                taskDetail: '# 123\n## 456',
+                taskDetail:
+                  '# 123\n## 456\n\n111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111',
                 comments: [
                   {
                     content: '这是一条评论',
@@ -268,20 +269,26 @@ export class APIController {
   }
   @Get('/task', { middleware: [AuthMiddleware] })
   async getTask(
-    @Query('taskId') taskId: string,
-    @Query('username') username: string,
-    @Headers('authorization') authHeader: string
+    @Query('taskId') taskId: number,
+    @Query('username') username: string
   ) {
-    const token = authHeader?.split(' ')[1];
-
-    if (username === '123' && token === '12345678') {
+    if (username === '123' && taskId === 1) {
       // Simulate fetching task from database
       const task = {
-        taskId: 1,
-        taskName: 'Sample Task',
-        taskDetail: 'This is a sample task detail.',
-        username: '123',
-        timestamp: Date.now(),
+        taskID: 1,
+        taskName: '任务1',
+        taskOwner: '123',
+        taskDetail: '# 123\n## 456',
+        comments: [
+          {
+            content: '这是一条评论',
+            timestamp: 1145141919810,
+          },
+          {
+            content: '这是另一条评论',
+            timestamp: 1145148101919,
+          },
+        ],
       };
 
       return {
@@ -299,14 +306,11 @@ export class APIController {
   @Del('/task', { middleware: [AuthMiddleware] })
   async deleteTask(
     @Body('taskId') taskId: number,
-    @Body('username') username: string,
-    @Headers('authorization') authHeader: string
+    @Body('username') username: string
   ) {
-    const token = authHeader?.split(' ')[1];
-
-    if (username === '123' && token === '12345678') {
+    if (username === '123' && taskId === 1) {
       // Simulate deleting task from database
-      const taskDeleted = taskId === 1; // Assume the task is deleted successfully
+      const taskDeleted = true; // Assume the task is deleted successfully
 
       if (taskDeleted) {
         return {
