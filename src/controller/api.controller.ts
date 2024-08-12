@@ -1,7 +1,7 @@
 import {
   Body,
   Controller,
-  Delete,
+  Del,
   Get,
   Headers,
   Inject,
@@ -296,7 +296,7 @@ export class APIController {
       };
     }
   }
-  @Delete('/task', { middleware: [AuthMiddleware] })
+  @Del('/task', { middleware: [AuthMiddleware] })
   async deleteTask(
     @Body('taskId') taskId: number,
     @Body('username') username: string,
@@ -306,7 +306,7 @@ export class APIController {
 
     if (username === '123' && token === '12345678') {
       // Simulate deleting task from database
-      const taskDeleted = true; // Assume the task is deleted successfully
+      const taskDeleted = taskId === 1; // Assume the task is deleted successfully
 
       if (taskDeleted) {
         return {
