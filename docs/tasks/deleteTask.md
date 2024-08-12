@@ -1,8 +1,8 @@
-# 查询任务
+# 删除任务
 
 ## **URL**
 
-`GET /api/task`
+`DELETE /api/task`
 
 ## **请求头**
 
@@ -15,7 +15,7 @@ Authorization: Bearer jwt-token-string
 
 ```json
 {
-  "taskId": "string"  ,
+  "taskId": "number",
   "username": "string"
 }
 ```
@@ -32,13 +32,7 @@ Content-Type: application/json
 ```json
 {
   "success": true,
-  "task": {
-    "taskId": "number",
-    "taskName": "string",
-    "taskDetail": "string",
-    "username": "string",
-    "timestamp": "number"
-  }
+  "message": "Task deleted successfully"
 }
 ```
 

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
   Inject,
@@ -224,7 +225,7 @@ export class APIController {
     }
   }
 
-  @Put('/tasks', { middleware: [AuthMiddleware] })
+  @Put('/task', { middleware: [AuthMiddleware] })
   async editTask(
     @Body(ALL)
     body: {
@@ -232,10 +233,9 @@ export class APIController {
       taskName: string;
       taskDetail: string;
       username: string;
-      timestamp: number;
     }
   ) {
-    const { taskId, taskName, taskDetail, username, timestamp } = body;
+    const { taskId, taskName, taskDetail, username } = body;
 
     if (username === '123') {
       // const result = await this.userService.editTask({
@@ -250,7 +250,68 @@ export class APIController {
           message: 'Task updated successfully',
           taskDetail: taskDetail,
           taskName: taskName,
-          timestamp: timestamp,
+        };
+      } else {
+        this.ctx.status = 404;
+        return {
+          success: false,
+          message: 'Task not found',
+        };
+      }
+    } else {
+      this.ctx.status = 401;
+      return {
+        success: false,
+        message: 'Invalid token or unauthorized access',
+      };
+    }
+  }
+  @Get('/task', { middleware: [AuthMiddleware] })
+  async getTask(
+    @Query('taskId') taskId: string,
+    @Query('username') username: string,
+    @Headers('authorization') authHeader: string
+  ) {
+    const token = authHeader?.split(' ')[1];
+
+    if (username === '123' && token === '12345678') {
+      // Simulate fetching task from database
+      const task = {
+        taskId: 1,
+        taskName: 'Sample Task',
+        taskDetail: 'This is a sample task detail.',
+        username: '123',
+        timestamp: Date.now(),
+      };
+
+      return {
+        success: true,
+        task: task,
+      };
+    } else {
+      this.ctx.status = 404;
+      return {
+        success: false,
+        message: 'Task not found',
+      };
+    }
+  }
+  @Delete('/task', { middleware: [AuthMiddleware] })
+  async deleteTask(
+    @Body('taskId') taskId: number,
+    @Body('username') username: string,
+    @Headers('authorization') authHeader: string
+  ) {
+    const token = authHeader?.split(' ')[1];
+
+    if (username === '123' && token === '12345678') {
+      // Simulate deleting task from database
+      const taskDeleted = true; // Assume the task is deleted successfully
+
+      if (taskDeleted) {
+        return {
+          success: true,
+          message: 'Task deleted successfully',
         };
       } else {
         this.ctx.status = 404;

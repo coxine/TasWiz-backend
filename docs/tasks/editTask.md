@@ -2,7 +2,7 @@
 
 ## **URL**
 
-`PUT /api/tasks`
+`PUT /api/task`
 
 ## **请求头**
 
@@ -15,11 +15,10 @@ Authorization: Bearer jwt-token-string
 
 ```json
 {
-  "taskId": "string",
+  "taskId": "number",
   "taskName": "string",
   "taskDetail": "string",
-  "username": "string",
-  "timestamp": "number"
+  "username": "string"
 }
 ```
 
