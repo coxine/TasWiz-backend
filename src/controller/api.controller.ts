@@ -470,34 +470,54 @@ export class APIController {
     @Query('taskId') taskId: number,
     @Query('username') username: string
   ) {
-    if (username === '123' && taskId === 1) {
-      // Simulate fetching task from database
-      const task = {
-        taskID: 1,
-        taskName: '任务1',
-        taskOwner: '123',
-        taskDetail: '# 123\n## 456',
-        comments: [
-          {
-            content: '这是一条评论',
-            timestamp: 1145141919810,
-          },
-          {
-            content: '这是另一条评论',
-            timestamp: 1145148101919,
-          },
-        ],
+    try {
+      const user = await this.userRepository.findOne({
+        where: { username },
+      });
+
+      if (!user) {
+        this.ctx.status = 404;
+        return {
+          success: false,
+          message: 'User not found',
+        };
+      }
+
+      const task = await this.taskRepository.findOne({
+        where: { task_id: taskId, task_owner: user },
+        relations: ['comments'],
+      });
+
+      if (!task) {
+        this.ctx.status = 404;
+        return {
+          success: false,
+          message: 'Task not found',
+        };
+      }
+
+      const taskData = {
+        taskId: task.task_id,
+        taskName: task.task_name,
+        taskDetail: task.task_detail,
+        comments: task.comments.map(comment => ({
+          content: comment.content,
+          timestamp: comment.timestamp,
+        })),
+        username: user.username,
+        timestamp: task.comments.length > 0 ? task.comments[0].timestamp : null,
       };
 
       return {
         success: true,
-        task: task,
+        task: taskData,
       };
-    } else {
-      this.ctx.status = 404;
+    } catch (error) {
+      this.ctx.status = 500;
+      console.error(error);
       return {
         success: false,
-        message: 'Task not found',
+        message: 'Internal server error',
       };
     }
   }
