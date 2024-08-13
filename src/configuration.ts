@@ -4,9 +4,8 @@ import * as koa from '@midwayjs/koa';
 import * as orm from '@midwayjs/typeorm';
 import * as validate from '@midwayjs/validate';
 import * as info from '@midwayjs/info';
-import { join } from 'path';
-// import { DefaultErrorFilter } from './filter/default.filter';
-// import { NotFoundFilter } from './filter/notfound.filter';
+import * as DefaultConfig from './config/config.default';
+import * as LocalConfig from './config/config.local';
 import { ReportMiddleware } from './middleware/report.middleware';
 
 @Configuration({
@@ -20,7 +19,12 @@ import { ReportMiddleware } from './middleware/report.middleware';
       enabledEnvironment: ['local'],
     },
   ],
-  importConfigs: [join(__dirname, './config')],
+  importConfigs: [
+    {
+      default: DefaultConfig,
+      local: LocalConfig,
+    },
+  ],
 })
 export class MainConfiguration {
   @App('koa')
