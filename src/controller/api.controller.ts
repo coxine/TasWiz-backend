@@ -20,6 +20,8 @@ import { Task } from '../entity/task.entity';
 import { User } from '../entity/user.entity';
 import { UserService } from '../service/user.service';
 import { generateToken } from '../utils/token.utils';
+import { handle401, handle404, handle500 } from '../utils/handlerror.utils';
+import { ValidateBodyMiddleware } from '../middleware/validate.middleware';
 
 @Controller('/api')
 export class APIController {
@@ -41,7 +43,7 @@ export class APIController {
   @InjectEntityModel(User)
   userRepository: Repository<User>;
 
-  @Post('/login')
+  @Post('/login', { middleware: [ValidateBodyMiddleware] })
   async login(
     @Body('username') username: string,
     @Body('password') password: string
@@ -52,11 +54,7 @@ export class APIController {
       });
 
       if (!user) {
-        this.ctx.status = 401;
-        return {
-          success: false,
-          message: 'Invalid username or password',
-        };
+        handle401(this.ctx);
       }
 
       const isPasswordValid = await bcrypt.compare(
@@ -65,11 +63,7 @@ export class APIController {
       );
 
       if (!isPasswordValid) {
-        this.ctx.status = 401;
-        return {
-          success: false,
-          message: 'Invalid username or password',
-        };
+        handle401(this.ctx);
       }
 
       const token = generateToken({ username });
@@ -80,16 +74,11 @@ export class APIController {
         token,
       };
     } catch (error) {
-      this.ctx.status = 500;
-      console.error(error);
-      return {
-        success: false,
-        message: 'Internal server error',
-      };
+      handle500(this.ctx, error);
     }
   }
 
-  @Post('/register')
+  @Post('/register', { middleware: [ValidateBodyMiddleware] })
   async register(
     @Body('username') username: string,
     @Body('password') password: string
@@ -123,16 +112,13 @@ export class APIController {
         token: newUser.token,
       };
     } catch (error) {
-      this.ctx.status = 500;
-      console.error(error);
-      return {
-        success: false,
-        message: 'Internal server error',
-      };
+      handle500(this.ctx, error);
     }
   }
 
-  @Post('/changePassword', { middleware: [AuthMiddleware] })
+  @Post('/changePassword', {
+    middleware: [AuthMiddleware, ValidateBodyMiddleware],
+  })
   async changePassword(
     @Body('username') username: string,
     @Body('oldPassword') oldPassword: string,
@@ -146,11 +132,7 @@ export class APIController {
       });
 
       if (!user) {
-        this.ctx.status = 404;
-        return {
-          success: false,
-          message: 'Username not found',
-        };
+        handle404(this.ctx, 'User not found');
       }
 
       const isOldPasswordValid = await bcrypt.compare(
@@ -159,11 +141,7 @@ export class APIController {
       );
 
       if (!isOldPasswordValid) {
-        this.ctx.status = 401;
-        return {
-          success: false,
-          message: 'Old password is incorrect',
-        };
+        handle401(this.ctx);
       }
 
       const newPasswordHash = await bcrypt.hash(newPassword, 10);
@@ -176,16 +154,11 @@ export class APIController {
         message: 'Password changed successfully',
       };
     } catch (error) {
-      this.ctx.status = 500;
-      console.error(error);
-      return {
-        success: false,
-        message: 'Internal server error',
-      };
+      handle500(this.ctx, error);
     }
   }
 
-  @Get('/projects', { middleware: [AuthMiddleware] })
+  @Get('/projects', { middleware: [AuthMiddleware, ValidateBodyMiddleware] })
   async getProjects(@Query('username') username: string) {
     try {
       const user = await this.userRepository.findOne({
@@ -199,11 +172,7 @@ export class APIController {
       });
 
       if (!user) {
-        this.ctx.status = 404;
-        return {
-          success: false,
-          message: 'User not found',
-        };
+        handle404(this.ctx, 'User not found');
       }
 
       const projects = user.projects.map(project => ({
@@ -224,16 +193,11 @@ export class APIController {
 
       return projects;
     } catch (error) {
-      this.ctx.status = 500;
-      console.error(error);
-      return {
-        success: false,
-        message: 'Internal server error',
-      };
+      handle500(this.ctx, error);
     }
   }
 
-  @Post('/project', { middleware: [AuthMiddleware] })
+  @Post('/project', { middleware: [AuthMiddleware, ValidateBodyMiddleware] })
   async createProject(
     @Body('username') username: string,
     @Body('projectName') projectName: string
@@ -244,11 +208,7 @@ export class APIController {
       });
 
       if (!user) {
-        this.ctx.status = 404;
-        return {
-          success: false,
-          message: 'User not found',
-        };
+        handle404(this.ctx, 'User not found');
       }
 
       const newProject = new Project();
@@ -267,16 +227,11 @@ export class APIController {
         },
       };
     } catch (error) {
-      this.ctx.status = 500;
-      console.error(error);
-      return {
-        success: false,
-        message: 'Internal server error',
-      };
+      handle500(this.ctx, error);
     }
   }
 
-  @Del('/project', { middleware: [AuthMiddleware] })
+  @Del('/project', { middleware: [AuthMiddleware, ValidateBodyMiddleware] })
   async deleteProject(
     @Body('projectId') projectId: number,
     @Body('username') username: string
@@ -288,11 +243,7 @@ export class APIController {
       });
 
       if (!user) {
-        this.ctx.status = 404;
-        return {
-          success: false,
-          message: 'User not found',
-        };
+        handle404(this.ctx, 'User not found');
       }
 
       const project = await this.projectRepository.findOne({
@@ -300,11 +251,7 @@ export class APIController {
       });
 
       if (!project) {
-        this.ctx.status = 404;
-        return {
-          success: false,
-          message: 'Project not found',
-        };
+        handle404(this.ctx, 'Project not found');
       }
 
       await this.projectRepository.remove(project);
@@ -314,16 +261,11 @@ export class APIController {
         message: 'Project deleted successfully',
       };
     } catch (error) {
-      this.ctx.status = 500;
-      console.error(error);
-      return {
-        success: false,
-        message: 'Internal server error',
-      };
+      handle500(this.ctx, error);
     }
   }
 
-  @Post('/task', { middleware: [AuthMiddleware] })
+  @Post('/task', { middleware: [AuthMiddleware, ValidateBodyMiddleware] })
   async createTask(
     @Body('taskName') taskName: string,
     @Body('taskDetail') taskDetail: string,
@@ -336,11 +278,7 @@ export class APIController {
       });
 
       if (!user) {
-        this.ctx.status = 404;
-        return {
-          success: false,
-          message: 'User not found',
-        };
+        handle404(this.ctx, 'User not found');
       }
 
       const project = await this.projectRepository.findOne({
@@ -348,11 +286,7 @@ export class APIController {
       });
 
       if (!project) {
-        this.ctx.status = 404;
-        return {
-          success: false,
-          message: 'Project not found',
-        };
+        handle404(this.ctx, 'Project not found');
       }
 
       const newTask = new Task();
@@ -375,16 +309,11 @@ export class APIController {
         },
       };
     } catch (error) {
-      this.ctx.status = 500;
-      console.error(error);
-      return {
-        success: false,
-        message: 'Internal server error',
-      };
+      handle500(this.ctx, error);
     }
   }
 
-  @Put('/task', { middleware: [AuthMiddleware] })
+  @Put('/task', { middleware: [AuthMiddleware, ValidateBodyMiddleware] })
   async updateTask(
     @Body('taskId') taskId: number,
     @Body('taskName') taskName: string,
@@ -397,11 +326,7 @@ export class APIController {
       });
 
       if (!user) {
-        this.ctx.status = 404;
-        return {
-          success: false,
-          message: 'User not found',
-        };
+        handle404(this.ctx, 'User not found');
       }
 
       const task = await this.taskRepository.findOne({
@@ -409,11 +334,7 @@ export class APIController {
       });
 
       if (!task) {
-        this.ctx.status = 404;
-        return {
-          success: false,
-          message: 'Task not found',
-        };
+        handle404(this.ctx, 'Task not found');
       }
 
       task.task_name = taskName;
@@ -426,16 +347,11 @@ export class APIController {
         message: 'Task updated successfully',
       };
     } catch (error) {
-      this.ctx.status = 500;
-      console.error(error);
-      return {
-        success: false,
-        message: 'Internal server error',
-      };
+      handle500(this.ctx, error);
     }
   }
 
-  @Get('/task', { middleware: [AuthMiddleware] })
+  @Get('/task', { middleware: [AuthMiddleware, ValidateBodyMiddleware] })
   async getTask(
     @Query('taskId') taskId: number,
     @Query('username') username: string
@@ -446,11 +362,7 @@ export class APIController {
       });
 
       if (!user) {
-        this.ctx.status = 404;
-        return {
-          success: false,
-          message: 'User not found',
-        };
+        handle404(this.ctx, 'User not found');
       }
 
       const task = await this.taskRepository.findOne({
@@ -459,11 +371,7 @@ export class APIController {
       });
 
       if (!task) {
-        this.ctx.status = 404;
-        return {
-          success: false,
-          message: 'Task not found',
-        };
+        handle404(this.ctx, 'Task not found');
       }
 
       const taskData = {
@@ -483,16 +391,11 @@ export class APIController {
         task: taskData,
       };
     } catch (error) {
-      this.ctx.status = 500;
-      console.error(error);
-      return {
-        success: false,
-        message: 'Internal server error',
-      };
+      handle500(this.ctx, error);
     }
   }
 
-  @Del('/task', { middleware: [AuthMiddleware] })
+  @Del('/task', { middleware: [AuthMiddleware, ValidateBodyMiddleware] })
   async deleteTask(
     @Body('taskId') taskId: number,
     @Body('username') username: string
@@ -503,11 +406,7 @@ export class APIController {
       });
 
       if (!user) {
-        this.ctx.status = 404;
-        return {
-          success: false,
-          message: 'User not found',
-        };
+        handle404(this.ctx, 'User not found');
       }
 
       const task = await this.taskRepository.findOne({
@@ -515,11 +414,7 @@ export class APIController {
       });
 
       if (!task) {
-        this.ctx.status = 404;
-        return {
-          success: false,
-          message: 'Task not found',
-        };
+        handle404(this.ctx, 'Task not found');
       }
 
       await this.taskRepository.remove(task);
@@ -529,16 +424,11 @@ export class APIController {
         message: 'Task deleted successfully',
       };
     } catch (error) {
-      this.ctx.status = 500;
-      console.error(error);
-      return {
-        success: false,
-        message: 'Internal server error',
-      };
+      handle500(this.ctx, error);
     }
   }
 
-  @Post('/comments', { middleware: [AuthMiddleware] })
+  @Post('/comments', { middleware: [AuthMiddleware, ValidateBodyMiddleware] })
   async addComment(
     @Body('username') username: string,
     @Body('taskId') taskId: number,
@@ -551,11 +441,7 @@ export class APIController {
       });
 
       if (!user) {
-        this.ctx.status = 404;
-        return {
-          success: false,
-          message: 'User not found',
-        };
+        handle404(this.ctx, 'User not found');
       }
 
       const task = await this.taskRepository.findOne({
@@ -563,11 +449,7 @@ export class APIController {
       });
 
       if (!task) {
-        this.ctx.status = 404;
-        return {
-          success: false,
-          message: 'Task not found',
-        };
+        handle404(this.ctx, 'Task not found');
       }
 
       const newComment = new Comment();
@@ -582,12 +464,7 @@ export class APIController {
         message: 'Comment added successfully',
       };
     } catch (error) {
-      this.ctx.status = 500;
-      console.error(error);
-      return {
-        success: false,
-        message: 'Internal server error',
-      };
+      handle500(this.ctx, error);
     }
   }
 }

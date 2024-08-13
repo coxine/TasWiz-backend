@@ -54,7 +54,17 @@ Content-Type: application/json
 
 ### 失败响应
 
-#### 未授权
+```http
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+```
+
+```json
+{
+  "success": false,
+  "message": "输入有误"
+}
+```
 
 ```http
 HTTP/1.1 401 Unauthorized
@@ -68,8 +78,6 @@ Content-Type: application/json
 }
 ```
 
-#### 用户不存在
-
 ```http
 HTTP/1.1 404 Not Found
 Content-Type: application/json
@@ -79,32 +87,5 @@ Content-Type: application/json
 {
   "success": false,
   "message": "User not found"
-}
-```
-
-#### 其他错误
-
-```http
-HTTP/1.1 400 Bad Request
-Content-Type: application/json
-```
-
-```json
-{
-  "success": false,
-  "message": "Invalid input"
-}
-```
-
-### 错误响应
-
-```http
-HTTP/1.1 500 Internal Server Error
-Content-Type: application/json
-```
-
-```json
-{
-  "message": "Internal server error"
 }
 ```

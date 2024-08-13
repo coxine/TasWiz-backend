@@ -46,7 +46,21 @@ Content-Type: application/json
 
 ### 失败响应
 
-## 用户名已存在
+#### 输入有误
+
+```http
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+```
+
+```json
+{
+  "success": false,
+  "message": "输入有误"
+}
+```
+
+#### 用户名已存在
 
 ```http
 
@@ -64,7 +78,7 @@ Content-Type: application/json
 }
 ```
 
-## 其他错误
+#### 其他错误
 
 ```http
 

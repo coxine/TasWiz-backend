@@ -54,7 +54,7 @@ Content-Type: application/json
 ```json
 {
   "success": false,
-  "message": "Invalid request data"
+  "message": "输入有误"
 }
 ```
 
@@ -66,7 +66,7 @@ Content-Type: application/json
 ```json
 {
   "success": false,
-  "message": "Invalid token or unauthorized access"
+  "message": "无效登陆信息"
 }
 ```
 

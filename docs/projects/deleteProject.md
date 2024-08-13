@@ -38,6 +38,22 @@ Content-Type: application/json
 
 ### 失败响应
 
+#### 输入有误
+
+```http
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+```
+
+```json
+{
+  "success": false,
+  "message": "输入有误"
+}
+```
+
+#### 无效登陆信息
+
 ```http
 HTTP/1.1 401 Unauthorized
 Content-Type: application/json
@@ -46,9 +62,11 @@ Content-Type: application/json
 ```json
 {
   "success": false,
-  "message": "Invalid token or unauthorized access"
+  "message": "无效登陆信息"
 }
 ```
+
+#### 未找到项目
 
 ```http
 HTTP/1.1 404 Not Found
