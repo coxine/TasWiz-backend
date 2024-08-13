@@ -264,6 +264,53 @@ export class APIController {
     }
   }
 
+  @Del('/project', { middleware: [AuthMiddleware] })
+  async deleteProject(
+    @Body('projectId') projectId: number,
+    @Body('username') username: string
+  ) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { username },
+        relations: ['projects'],
+      });
+
+      if (!user) {
+        this.ctx.status = 404;
+        return {
+          success: false,
+          message: 'User not found',
+        };
+      }
+
+      const project = await this.projectRepository.findOne({
+        where: { project_id: projectId, project_owner: user },
+      });
+
+      if (!project) {
+        this.ctx.status = 404;
+        return {
+          success: false,
+          message: 'Project not found',
+        };
+      }
+
+      await this.projectRepository.remove(project);
+
+      return {
+        success: true,
+        message: 'Project deleted successfully',
+      };
+    } catch (error) {
+      this.ctx.status = 500;
+      console.error(error);
+      return {
+        success: false,
+        message: 'Internal server error',
+      };
+    }
+  }
+
   @Post('/comments', { middleware: [AuthMiddleware] })
   async addComment(
     @Body(ALL)
@@ -393,36 +440,6 @@ export class APIController {
         return {
           success: false,
           message: 'Task not found',
-        };
-      }
-    } else {
-      this.ctx.status = 401;
-      return {
-        success: false,
-        message: 'Invalid token or unauthorized access',
-      };
-    }
-  }
-
-  @Del('/project', { middleware: [AuthMiddleware] })
-  async deleteProject(
-    @Body('projectId') projectId: number,
-    @Body('username') username: string
-  ) {
-    if (username === '123' && projectId === 1) {
-      // Simulate deleting project from database
-      const projectDeleted = true; // Assume the project is deleted successfully
-
-      if (projectDeleted) {
-        return {
-          success: true,
-          message: 'Project deleted successfully',
-        };
-      } else {
-        this.ctx.status = 404;
-        return {
-          success: false,
-          message: 'Project not found',
         };
       }
     } else {
