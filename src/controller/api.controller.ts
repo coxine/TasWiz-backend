@@ -9,9 +9,9 @@ import {
   Post,
   Put,
   Query,
-  ALL,
 } from '@midwayjs/core';
 import { AuthMiddleware } from '../middleware/auth.middleware';
+import { Comment } from '../entity/comment.entity';
 import { Context } from '@midwayjs/koa';
 import { InjectEntityModel } from '@midwayjs/typeorm';
 import { Project } from '../entity/project.entity';
@@ -28,6 +28,9 @@ export class APIController {
 
   @Inject()
   userService: UserService;
+
+  @InjectEntityModel(Comment)
+  commentRepository: Repository<Comment>;
 
   @InjectEntityModel(Task)
   taskRepository: Repository<Task>;
@@ -432,39 +435,6 @@ export class APIController {
     }
   }
 
-  @Post('/comments', { middleware: [AuthMiddleware] })
-  async addComment(
-    @Body(ALL)
-    body: {
-      username: string;
-      taskId: string;
-      comment: string;
-      timestamp: number;
-    }
-  ) {
-    const { username, taskId, comment, timestamp } = body;
-
-    if (username === '123') {
-      // const result = await this.userService.addComment({ username, taskId, comment, timestamp });
-      return {
-        success: true,
-        message: 'Comment added successfully',
-        data: {
-          username: username,
-          taskId: taskId,
-          comment: comment,
-          timestamp: timestamp,
-        },
-      };
-    } else {
-      this.ctx.status = 401;
-      return {
-        success: false,
-        message: 'Invalid token or unauthorized access',
-      };
-    }
-  }
-
   @Get('/task', { middleware: [AuthMiddleware] })
   async getTask(
     @Query('taskId') taskId: number,
@@ -557,6 +527,59 @@ export class APIController {
       return {
         success: true,
         message: 'Task deleted successfully',
+      };
+    } catch (error) {
+      this.ctx.status = 500;
+      console.error(error);
+      return {
+        success: false,
+        message: 'Internal server error',
+      };
+    }
+  }
+
+  @Post('/comments', { middleware: [AuthMiddleware] })
+  async addComment(
+    @Body('username') username: string,
+    @Body('taskId') taskId: number,
+    @Body('comment') commentContent: string,
+    @Body('timestamp') timestamp: number
+  ) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { username },
+      });
+
+      if (!user) {
+        this.ctx.status = 404;
+        return {
+          success: false,
+          message: 'User not found',
+        };
+      }
+
+      const task = await this.taskRepository.findOne({
+        where: { task_id: taskId, task_owner: user },
+      });
+
+      if (!task) {
+        this.ctx.status = 404;
+        return {
+          success: false,
+          message: 'Task not found',
+        };
+      }
+
+      const newComment = new Comment();
+      newComment.content = commentContent;
+      newComment.timestamp = timestamp;
+      newComment.task = task;
+
+      await this.commentRepository.save(newComment);
+
+      return {
+        success: true,
+        message: 'Comment added successfully',
       };
     } catch (error) {
       this.ctx.status = 500;
