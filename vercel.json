@@ -2,5 +2,10 @@
   "version": 2,
   "env": {
     "NPM_CONFIG_REGISTRY": "https://registry.npmmirror.com"
+  },
+  "functions": {
+    "/index.js": {
+      "runtime": "nodejs14.x"
+    }
   }
 }
