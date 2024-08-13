@@ -5,7 +5,6 @@ import {
   Controller,
   Del,
   Get,
-  Headers,
   Inject,
   Post,
   Put,
@@ -15,6 +14,7 @@ import {
 import { AuthMiddleware } from '../middleware/auth.middleware';
 import { Context } from '@midwayjs/koa';
 import { InjectEntityModel } from '@midwayjs/typeorm';
+import { Project } from '../entity/project.entity';
 import { Repository } from 'typeorm';
 import { User } from '../entity/user.entity';
 import { UserService } from '../service/user.service';
@@ -27,6 +27,9 @@ export class APIController {
 
   @Inject()
   userService: UserService;
+
+  @InjectEntityModel(Project)
+  projectRepository: Repository<Project>;
 
   @InjectEntityModel(User)
   userRepository: Repository<User>;
@@ -175,90 +178,88 @@ export class APIController {
     }
   }
 
-  @Get('/projects')
-  async getProjects(
-    @Query('username') username: string,
-    @Headers('authorization') authHeader: string
-  ) {
-    const token = authHeader?.split(' ')[1];
+  @Get('/projects', { middleware: [AuthMiddleware] })
+  async getProjects(@Query('username') username: string) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { username },
+        relations: ['projects', 'projects.tasks', 'projects.tasks.comments'],
+      });
 
-    if (username === '123' && token === '12345678') {
+      if (!user) {
+        this.ctx.status = 404;
+        return {
+          success: false,
+          message: 'User not found',
+        };
+      }
+
+      const projects = user.projects.map(project => ({
+        projectID: project.project_id,
+        projectName: project.project_name,
+        projectOwner: user.username,
+        tasks: project.tasks.map(task => ({
+          taskID: task.task_id,
+          taskName: task.task_name,
+          taskOwner: task.task_owner.username,
+          taskDetail: task.task_detail,
+          comments: task.comments.map(comment => ({
+            content: comment.content,
+            timestamp: comment.timestamp,
+          })),
+        })),
+      }));
+
+      return projects;
+    } catch (error) {
+      this.ctx.status = 500;
+      console.error(error);
+      return {
+        success: false,
+        message: 'Internal server error',
+      };
+    }
+  }
+
+  @Post('/project', { middleware: [AuthMiddleware] })
+  async createProject(
+    @Body('username') username: string,
+    @Body('projectName') projectName: string
+  ) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { username },
+      });
+
+      if (!user) {
+        this.ctx.status = 404;
+        return {
+          success: false,
+          message: 'User not found',
+        };
+      }
+
+      const newProject = new Project();
+      newProject.project_name = projectName;
+      newProject.project_owner = user;
+
+      await this.projectRepository.save(newProject);
+
+      this.ctx.status = 201;
       return {
         success: true,
-        message: 'OK',
-        data: [
-          {
-            projectID: 1,
-            projectName: '待办',
-            projectOwner: '123',
-            tasks: [
-              {
-                taskID: 1,
-                taskName: '任务1',
-                taskOwner: '123',
-                taskDetail: '# 123\n## 456',
-                comments: [
-                  {
-                    content: '这是一条评论',
-                    timestamp: 1145141919810,
-                  },
-                  {
-                    content: '这是另一条评论',
-                    timestamp: 1145148101919,
-                  },
-                ],
-              },
-              {
-                taskID: 2,
-                taskName: '任务2',
-                taskOwner: '123',
-                taskDetail: '# 123\n## 456',
-                comments: [
-                  {
-                    content: '这是一条评论',
-                    timestamp: 1145141919810,
-                  },
-                  {
-                    content: '这是另一条评论',
-                    timestamp: 1888888888888,
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            projectID: 2,
-            projectName: '待办2',
-            projectOwner: '123',
-            tasks: [
-              {
-                taskID: 3,
-                taskName: '任务3',
-                taskOwner: '123',
-                taskDetail:
-                  '# 123\n## 456\n\n111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111',
-                comments: [
-                  {
-                    content: '这是一条评论',
-                    timestamp: 1145141919810,
-                  },
-                ],
-              },
-            ],
-          },
-        ],
+        message: 'Project created successfully',
+        project: {
+          username: user.username,
+          projectName: newProject.project_name,
+        },
       };
-    } else if (token !== '12345678') {
-      this.ctx.status = 401;
+    } catch (error) {
+      this.ctx.status = 500;
+      console.error(error);
       return {
         success: false,
-        message: 'Unauthorized',
-      };
-    } else {
-      this.ctx.status = 404;
-      return {
-        success: false,
-        message: 'User not found',
+        message: 'Internal server error',
       };
     }
   }
@@ -429,41 +430,6 @@ export class APIController {
       return {
         success: false,
         message: 'Invalid token or unauthorized access',
-      };
-    }
-  }
-
-  @Post('/project', { middleware: [AuthMiddleware] })
-  async addProject(
-    @Body('username') username: string,
-    @Body('projectName') projectName: string
-  ) {
-    if (username && projectName) {
-      // Simulate adding project to database
-      const projectAdded = true; // Assume the project is added successfully
-
-      if (projectAdded) {
-        this.ctx.status = 201;
-        return {
-          success: true,
-          message: 'Project created successfully',
-          project: {
-            username: username,
-            projectName: projectName,
-          },
-        };
-      } else {
-        this.ctx.status = 500;
-        return {
-          success: false,
-          message: 'Internal server error',
-        };
-      }
-    } else {
-      this.ctx.status = 400;
-      return {
-        success: false,
-        message: 'Invalid request data',
       };
     }
   }
