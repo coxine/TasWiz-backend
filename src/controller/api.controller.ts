@@ -187,7 +187,12 @@ export class APIController {
     try {
       const user = await this.userRepository.findOne({
         where: { username },
-        relations: ['projects', 'projects.tasks', 'projects.tasks.comments'],
+        relations: [
+          'projects',
+          'projects.tasks',
+          'projects.tasks.comments',
+          'projects.tasks.task_owner',
+        ],
       });
 
       if (!user) {
@@ -197,7 +202,7 @@ export class APIController {
           message: 'User not found',
         };
       }
-      console.log(user);
+
       const projects = user.projects.map(project => ({
         projectID: project.project_id,
         projectName: project.project_name,
@@ -376,6 +381,57 @@ export class APIController {
     }
   }
 
+  @Put('/task', { middleware: [AuthMiddleware] })
+  async updateTask(
+    @Body('taskId') taskId: number,
+    @Body('taskName') taskName: string,
+    @Body('taskDetail') taskDetail: string,
+    @Body('username') username: string
+  ) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { username },
+      });
+
+      if (!user) {
+        this.ctx.status = 404;
+        return {
+          success: false,
+          message: 'User not found',
+        };
+      }
+
+      const task = await this.taskRepository.findOne({
+        where: { task_id: taskId, task_owner: user },
+      });
+
+      if (!task) {
+        this.ctx.status = 404;
+        return {
+          success: false,
+          message: 'Task not found',
+        };
+      }
+
+      task.task_name = taskName;
+      task.task_detail = taskDetail;
+
+      await this.taskRepository.save(task);
+
+      return {
+        success: true,
+        message: 'Task updated successfully',
+      };
+    } catch (error) {
+      this.ctx.status = 500;
+      console.error(error);
+      return {
+        success: false,
+        message: 'Internal server error',
+      };
+    }
+  }
+
   @Post('/comments', { middleware: [AuthMiddleware] })
   async addComment(
     @Body(ALL)
@@ -409,47 +465,6 @@ export class APIController {
     }
   }
 
-  @Put('/task', { middleware: [AuthMiddleware] })
-  async editTask(
-    @Body(ALL)
-    body: {
-      taskId: number;
-      taskName: string;
-      taskDetail: string;
-      username: string;
-    }
-  ) {
-    const { taskId, taskName, taskDetail, username } = body;
-
-    if (username === '123') {
-      // const result = await this.userService.editTask({
-      //   taskId,
-      //   taskName,
-      //   taskDetail,
-      //   timestamp,
-      // });
-      if (taskId === 1) {
-        return {
-          success: true,
-          message: 'Task updated successfully',
-          taskDetail: taskDetail,
-          taskName: taskName,
-        };
-      } else {
-        this.ctx.status = 404;
-        return {
-          success: false,
-          message: 'Task not found',
-        };
-      }
-    } else {
-      this.ctx.status = 401;
-      return {
-        success: false,
-        message: 'Invalid token or unauthorized access',
-      };
-    }
-  }
   @Get('/task', { middleware: [AuthMiddleware] })
   async getTask(
     @Query('taskId') taskId: number,
@@ -486,32 +501,49 @@ export class APIController {
       };
     }
   }
+
   @Del('/task', { middleware: [AuthMiddleware] })
   async deleteTask(
     @Body('taskId') taskId: number,
     @Body('username') username: string
   ) {
-    if (username === '123' && taskId === 1) {
-      // Simulate deleting task from database
-      const taskDeleted = true; // Assume the task is deleted successfully
+    try {
+      const user = await this.userRepository.findOne({
+        where: { username },
+      });
 
-      if (taskDeleted) {
+      if (!user) {
+        this.ctx.status = 404;
         return {
-          success: true,
-          message: 'Task deleted successfully',
+          success: false,
+          message: 'User not found',
         };
-      } else {
+      }
+
+      const task = await this.taskRepository.findOne({
+        where: { task_id: taskId, task_owner: user },
+      });
+
+      if (!task) {
         this.ctx.status = 404;
         return {
           success: false,
           message: 'Task not found',
         };
       }
-    } else {
-      this.ctx.status = 401;
+
+      await this.taskRepository.remove(task);
+
+      return {
+        success: true,
+        message: 'Task deleted successfully',
+      };
+    } catch (error) {
+      this.ctx.status = 500;
+      console.error(error);
       return {
         success: false,
-        message: 'Invalid token or unauthorized access',
+        message: 'Internal server error',
       };
     }
   }
