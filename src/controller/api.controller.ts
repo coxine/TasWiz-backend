@@ -23,7 +23,9 @@ import { generateToken } from '../utils/token.utils';
 import { handle401, handle404, handle500 } from '../utils/handlerror.utils';
 import { ValidateBodyMiddleware } from '../middleware/validate.middleware';
 
-@Controller('/api')
+@Controller('/api', {
+  middleware: [ValidateBodyMiddleware],
+})
 export class APIController {
   @Inject()
   ctx: Context;
@@ -43,7 +45,7 @@ export class APIController {
   @InjectEntityModel(User)
   userRepository: Repository<User>;
 
-  @Post('/login', { middleware: [ValidateBodyMiddleware] })
+  @Post('/login')
   async login(
     @Body('username') username: string,
     @Body('password') password: string
@@ -78,7 +80,7 @@ export class APIController {
     }
   }
 
-  @Post('/register', { middleware: [ValidateBodyMiddleware] })
+  @Post('/register')
   async register(
     @Body('username') username: string,
     @Body('password') password: string
@@ -117,7 +119,7 @@ export class APIController {
   }
 
   @Post('/changePassword', {
-    middleware: [AuthMiddleware, ValidateBodyMiddleware],
+    middleware: [AuthMiddleware],
   })
   async changePassword(
     @Body('username') username: string,
