@@ -233,7 +233,7 @@ export class APIController {
     }
   }
 
-  @Del('/project', { middleware: [AuthMiddleware, ValidateBodyMiddleware] })
+  @Del('/project', { middleware: [AuthMiddleware] })
   async deleteProject(
     @Body('projectId') projectId: number,
     @Body('username') username: string
@@ -250,10 +250,16 @@ export class APIController {
 
       const project = await this.projectRepository.findOne({
         where: { project_id: projectId, project_owner: user },
+        relations: ['tasks'],
       });
 
       if (!project) {
         handle404(this.ctx, 'Project not found');
+      }
+
+      for (const task of project.tasks) {
+        await this.commentRepository.delete({ task });
+        await this.taskRepository.remove(task);
       }
 
       await this.projectRepository.remove(project);
@@ -419,6 +425,7 @@ export class APIController {
         handle404(this.ctx, 'Task not found');
       }
 
+      await this.commentRepository.delete({ task });
       await this.taskRepository.remove(task);
 
       return {
