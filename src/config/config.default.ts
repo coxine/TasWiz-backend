@@ -25,12 +25,7 @@ export default {
         database: 'kanban',
         synchronize: true,
         logging: false,
-        entities: [
-          Task,
-          Project,
-          User,
-          Comment
-        ],
+        entities: [Task, Project, User, Comment],
       },
     },
   },
