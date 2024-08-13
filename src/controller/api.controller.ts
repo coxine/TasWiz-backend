@@ -1,3 +1,5 @@
+import * as bcrypt from 'bcrypt';
+
 import {
   Body,
   Controller,
@@ -10,9 +12,13 @@ import {
   Query,
   ALL,
 } from '@midwayjs/core';
-import { Context } from '@midwayjs/koa';
-import { UserService } from '../service/user.service';
 import { AuthMiddleware } from '../middleware/auth.middleware';
+import { Context } from '@midwayjs/koa';
+import { InjectEntityModel } from '@midwayjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../entity/user.entity';
+import { UserService } from '../service/user.service';
+import { generateToken } from '../utils/token.utils';
 
 @Controller('/api')
 export class APIController {
@@ -21,6 +27,9 @@ export class APIController {
 
   @Inject()
   userService: UserService;
+
+  @InjectEntityModel(User)
+  userRepository: Repository<User>;
 
   @Get('/get_user')
   async getUser(@Query('uid') uid) {
@@ -50,25 +59,41 @@ export class APIController {
   @Post('/register')
   async register(@Body(ALL) body: { username: string; password: string }) {
     const { username, password } = body;
-    if (username === '123') {
-      this.ctx.status = 409;
-      return {
-        success: false,
-        message: 'Username already exists',
-      };
-    }
 
-    if (username && password) {
+    try {
+      const existingUser = await this.userRepository.findOne({
+        where: { username },
+      });
+      if (existingUser) {
+        this.ctx.status = 409;
+        return {
+          success: false,
+          message: 'Username already exists',
+        };
+      }
+
+      // 哈希密码
+      const passwordHash = await bcrypt.hash(password, 10);
+
+      // 创建新用户
+      const newUser = new User();
+      newUser.username = username;
+      newUser.password_hash = passwordHash;
+      newUser.token = generateToken({ username });
+
+      await this.userRepository.save(newUser);
+
       return {
         success: true,
         message: 'Registration successful',
-        token: '12345678',
+        token: newUser.token,
       };
-    } else {
-      this.ctx.status = 400;
+    } catch (error) {
+      this.ctx.status = 500;
+      console.error(error);
       return {
         success: false,
-        message: 'Invalid input',
+        message: 'Internal server error',
       };
     }
   }
