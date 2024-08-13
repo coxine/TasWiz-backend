@@ -31,27 +31,49 @@ export class APIController {
   @InjectEntityModel(User)
   userRepository: Repository<User>;
 
-  @Get('/get_user')
-  async getUser(@Query('uid') uid) {
-    const user = await this.userService.getUser({ uid });
-    return { success: true, message: 'OK', data: user };
-  }
-
   @Post('/login')
   async login(@Body(ALL) body: { username: string; password: string }) {
     const { username, password } = body;
 
-    if (username === '123' && password === '456') {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { username },
+      });
+
+      if (!user) {
+        this.ctx.status = 401;
+        return {
+          success: false,
+          message: 'Invalid username or password',
+        };
+      }
+
+      const isPasswordValid = await bcrypt.compare(
+        password,
+        user.password_hash
+      );
+
+      if (!isPasswordValid) {
+        this.ctx.status = 401;
+        return {
+          success: false,
+          message: 'Invalid username or password',
+        };
+      }
+
+      const token = generateToken({ username });
+
       return {
         success: true,
         message: 'Login successful',
-        token: '12345678',
+        token,
       };
-    } else {
-      this.ctx.status = 401;
+    } catch (error) {
+      this.ctx.status = 500;
+      console.error(error);
       return {
         success: false,
-        message: 'Invalid username or password',
+        message: 'Internal server error',
       };
     }
   }
