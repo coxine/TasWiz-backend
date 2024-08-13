@@ -16,6 +16,7 @@ import { Context } from '@midwayjs/koa';
 import { InjectEntityModel } from '@midwayjs/typeorm';
 import { Project } from '../entity/project.entity';
 import { Repository } from 'typeorm';
+import { Task } from '../entity/task.entity';
 import { User } from '../entity/user.entity';
 import { UserService } from '../service/user.service';
 import { generateToken } from '../utils/token.utils';
@@ -27,6 +28,9 @@ export class APIController {
 
   @Inject()
   userService: UserService;
+
+  @InjectEntityModel(Task)
+  taskRepository: Repository<Task>;
 
   @InjectEntityModel(Project)
   projectRepository: Repository<Project>;
@@ -193,7 +197,7 @@ export class APIController {
           message: 'User not found',
         };
       }
-
+      console.log(user);
       const projects = user.projects.map(project => ({
         projectID: project.project_id,
         projectName: project.project_name,
@@ -300,6 +304,67 @@ export class APIController {
       return {
         success: true,
         message: 'Project deleted successfully',
+      };
+    } catch (error) {
+      this.ctx.status = 500;
+      console.error(error);
+      return {
+        success: false,
+        message: 'Internal server error',
+      };
+    }
+  }
+
+  @Post('/task', { middleware: [AuthMiddleware] })
+  async createTask(
+    @Body('taskName') taskName: string,
+    @Body('taskDetail') taskDetail: string,
+    @Body('username') username: string,
+    @Body('projectId') projectId: number
+  ) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { username },
+      });
+
+      if (!user) {
+        this.ctx.status = 404;
+        return {
+          success: false,
+          message: 'User not found',
+        };
+      }
+
+      const project = await this.projectRepository.findOne({
+        where: { project_id: projectId, project_owner: user },
+      });
+
+      if (!project) {
+        this.ctx.status = 404;
+        return {
+          success: false,
+          message: 'Project not found',
+        };
+      }
+
+      const newTask = new Task();
+      newTask.task_name = taskName;
+      newTask.task_detail = taskDetail;
+      newTask.task_owner = user;
+      newTask.project = project;
+
+      await this.taskRepository.save(newTask);
+
+      this.ctx.status = 201;
+      return {
+        success: true,
+        message: 'Task created successfully',
+        task: {
+          taskId: newTask.task_id,
+          taskName: newTask.task_name,
+          taskDetail: newTask.task_detail,
+          username: user.username,
+        },
       };
     } catch (error) {
       this.ctx.status = 500;
@@ -447,46 +512,6 @@ export class APIController {
       return {
         success: false,
         message: 'Invalid token or unauthorized access',
-      };
-    }
-  }
-
-  @Post('/task', { middleware: [AuthMiddleware] })
-  async createTask(
-    @Body('taskName') taskName: string,
-    @Body('taskDetail') taskDetail: string,
-    @Body('username') username: string,
-    @Body('projectId') projectId: number
-  ) {
-    if (taskName && taskDetail && username === '123' && projectId === 1) {
-      // Simulate adding task to database
-      const taskId = Math.floor(Math.random() * 1000); // Generate a random task ID
-      const taskCreated = true; // Assume the task is created successfully
-
-      if (taskCreated) {
-        this.ctx.status = 201;
-        return {
-          success: true,
-          message: 'Task created successfully',
-          task: {
-            taskId: taskId,
-            taskName: taskName,
-            taskDetail: taskDetail,
-            username: username,
-          },
-        };
-      } else {
-        this.ctx.status = 500;
-        return {
-          success: false,
-          message: 'Internal server error',
-        };
-      }
-    } else {
-      this.ctx.status = 400;
-      return {
-        success: false,
-        message: 'Invalid request data',
       };
     }
   }
