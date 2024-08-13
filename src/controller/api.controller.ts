@@ -32,9 +32,10 @@ export class APIController {
   userRepository: Repository<User>;
 
   @Post('/login')
-  async login(@Body(ALL) body: { username: string; password: string }) {
-    const { username, password } = body;
-
+  async login(
+    @Body('username') username: string,
+    @Body('password') password: string
+  ) {
     try {
       const user = await this.userRepository.findOne({
         where: { username },
@@ -79,9 +80,10 @@ export class APIController {
   }
 
   @Post('/register')
-  async register(@Body(ALL) body: { username: string; password: string }) {
-    const { username, password } = body;
-
+  async register(
+    @Body('username') username: string,
+    @Body('password') password: string
+  ) {
     try {
       const existingUser = await this.userRepository.findOne({
         where: { username },
@@ -120,34 +122,55 @@ export class APIController {
     }
   }
 
-  @Post('/changePassword')
+  @Post('/changePassword', { middleware: [AuthMiddleware] })
   async changePassword(
-    @Body(ALL)
-    body: {
-      username: string;
-      oldPassword: string;
-      newPassword: string;
-    }
+    @Body('username') username: string,
+    @Body('oldPassword') oldPassword: string,
+    @Body('newPassword') newPassword: string
   ) {
-    const { username, oldPassword, newPassword } = body;
+    console.log(username, oldPassword, newPassword);
 
-    if (username === '123' && oldPassword === '456') {
-      if (oldPassword !== newPassword) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { username },
+      });
+
+      if (!user) {
+        this.ctx.status = 404;
         return {
-          success: true,
-          message: 'Password changed successfully',
-        };
-      } else {
-        this.ctx.status = 500;
-        return {
-          message: 'Internal server error',
+          success: false,
+          message: 'Username not found',
         };
       }
-    } else {
-      this.ctx.status = 401;
+
+      const isOldPasswordValid = await bcrypt.compare(
+        oldPassword,
+        user.password_hash
+      );
+
+      if (!isOldPasswordValid) {
+        this.ctx.status = 401;
+        return {
+          success: false,
+          message: 'Old password is incorrect',
+        };
+      }
+
+      const newPasswordHash = await bcrypt.hash(newPassword, 10);
+      user.password_hash = newPasswordHash;
+
+      await this.userRepository.save(user);
+
+      return {
+        success: true,
+        message: 'Password changed successfully',
+      };
+    } catch (error) {
+      this.ctx.status = 500;
+      console.error(error);
       return {
         success: false,
-        message: 'Old password is incorrect',
+        message: 'Internal server error',
       };
     }
   }
