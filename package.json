@@ -8,7 +8,7 @@
     "@midwayjs/core": "^3.16.2",
     "@midwayjs/cross-domain": "^3.16.8",
     "@midwayjs/decorator": "^3.16.2",
-    "@midwayjs/info": "^3.12.0",
+    "@midwayjs/info": "^3.17.0",
     "@midwayjs/koa": "^3.16.8",
     "@midwayjs/logger": "^3.1.0",
     "@midwayjs/typeorm": "^3.16.5",
